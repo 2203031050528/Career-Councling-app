@@ -24,36 +24,32 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
-    
+    setError('');
+
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
-        credentials: 'include',
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
 
-      if (response.ok && data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({
-          id: data._id,
-          name: data.name,
-          email: data.email,
-        }));
-        navigate('/dashboard', { replace: true });
-      } else {
+      if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'Failed to login. Please try again.');
+
+      // Store token and user data
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data));
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Failed to login');
     } finally {
       setLoading(false);
     }
